@@ -31,12 +31,12 @@ class RunSegmentationInference():
         self.output_folder = 'media/Output_image/'
 
         self.front_base_path, self.front_filename = os.path.split(self.front_image.front_input_image.path)
-        self.front_sample_image = SegmentationSample(root_dir = self.front_base_path, image_file=self.front_filename, device='cuda')
+        self.front_sample_image = SegmentationSample(root_dir = self.front_base_path, image_file=self.front_filename, device='cpu')
         
         self.side_base_path, self.side_filename = os.path.split(self.side_image.side_input_image.path)
-        self.side_sample_image = SegmentationSample(root_dir = self.side_base_path, image_file = self.side_filename, device='cuda')
+        self.side_sample_image = SegmentationSample(root_dir = self.side_base_path, image_file = self.side_filename, device='cpu')
 
-        self.model = SemanticSeg(pretrained=True, device='cuda')
+        self.model = SemanticSeg(pretrained=True, device='cpu')
 
         self.updated_front_image = None
         self.updated_side_image = None
@@ -71,33 +71,3 @@ class RunSegmentationInference():
         frontMeasure, sideMeasure = img_processor.process_measurements()
         
         return AllMeasurements(frontMeasure, sideMeasure)
-
-
-class RunMeasureProcessing():
-    def __init__(self, image_front, image_side):
-        self.front_image = image_front
-        self.side_image = image_side
-
-        self.output_folder = 'media/Output_image/'
-
-        self.front_base_path, self.front_filename = os.path.split(self.front_image.input_image.path)
-        self.front_sample_image = SegmentationSample(root_dir = self.front_base_path, image_file=self.front_filename, device='cuda')
-        
-        self.side_base_path, self.side_filename = os.path.split(self.side_image.input_image.path)
-
-
-        self.process_imgs(self.front_image, self.side_image)
-
-    def process_imgs():
-        ## TESTING CLASSES ##
-        dirname = os.path.dirname(__file__)
-
-        bgAI = BackgroundAI()
-        imgFront = bgAI.segment(os.path.join(dirname, 'ImageProcessing/images/front1.jpg'))
-        imgSide = bgAI.segment(os.path.join(dirname, 'ImageProcessing/images/side1.jpg'))
-
-        img_processor = IMGSProcessor(imgFront, imgSide)
-        frontMeasure, sideMeasure = img_processor.process_measurements()
-        measurements = AllMeasurements(frontMeasure, sideMeasure)
-
-        
