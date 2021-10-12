@@ -1,7 +1,6 @@
 import uuid
 import os
 from PIL import Image
-import numpy as np
 from ImageProcessing.semantic_data import SegmentationSample
 from ImageProcessing.fcn_implementation import SemanticSeg
 from ImageProcessing.ProcessAllSizes import IMGSProcessor, AllMeasurements

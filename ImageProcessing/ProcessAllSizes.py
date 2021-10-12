@@ -1,7 +1,4 @@
 from math import sqrt, pi
-import torchvision.models.segmentation as seg_models
-from PIL import Image
-import torch
 import numpy as np
 import cv2
 import torchvision.transforms as T
