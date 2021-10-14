@@ -40,6 +40,7 @@ def run_measureme_tool(request):
     if flag == 1:
         frontimg_path = os.path.relpath(arr[0]['image'], '/')
         sideimg_path = os.path.relpath(arr[1]['image'], '/')
+        print(sideimg_path)
         front_image = ImageSegmentation.objects.create(front_input_image=frontimg_path, name='image_{:02d}'.format(int(uuid.uuid1() )))
         side_image = ImageSegmentation.objects.create(side_input_image=sideimg_path, name='image_{:02d}'.format(int(uuid.uuid1() )))
         runner = RunSegmentationInference(front_image, side_image)
