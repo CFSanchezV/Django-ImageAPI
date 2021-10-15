@@ -4,7 +4,7 @@ from .models import ImageSegmentation, Image, Measurement
 class OutputImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ImageSegmentation
-        fields = ('uuid', 'name', 'front_input_image', 'side_input_image', 'verified', 'created_at', 'updated_at')
+        fields = ('uuid', 'name', 'input_image', 'verified', 'created_at', 'updated_at')
 
 class ImageSerializer(serializers.ModelSerializer):
     class Meta:

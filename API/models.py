@@ -9,8 +9,7 @@ import uuid
 class ImageSegmentation(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255, null=True, blank=True)
-    front_input_image = models.FileField(upload_to=get_output_image_path, null=True, blank=True)
-    side_input_image = models.FileField(upload_to=get_output_image_path, null=True, blank=True)
+    input_image = models.FileField(upload_to=get_output_image_path, null=True, blank=True)
     verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

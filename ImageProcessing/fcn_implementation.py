@@ -1,4 +1,4 @@
-import torch
+from torch import no_grad, argmax
 import torch.nn as nn
 import numpy as np
 import cv2
@@ -8,36 +8,30 @@ from ImageProcessing.ProcessAllSizes import MUtils
 
 
 class SemanticSeg(nn.Module):
-    def __init__(self, pretrained: bool, device):
+    def __init__(self):
         super(SemanticSeg, self).__init__()
 
-        if device == 'cuda' and torch.cuda.is_available():
-            self.device = 'cuda'
-        else:
-            self.device = 'cpu'
-
-        self.model = self.load_model(pretrained)
+        self.device = 'cpu'
+        self.model = self.load_model(pretrained=True)
 
     def forward(self, input: SegmentationSample):
-        with torch.no_grad():
+        with no_grad():
             output = self.model(input.processed_image)['out']
+            reshaped_output = argmax(output.squeeze(), dim=0).detach().cpu()
 
-        reshaped_output = torch.argmax(output.squeeze(), dim=0).detach().cpu()
         return reshaped_output
 
     # Add the Backbone option in the parameters
-    def load_model(self, pretrained=False):
-        if pretrained:
-            model = seg_models.fcn_resnet101(pretrained=True)
-        else:
-            model = seg_models.fcn_resnet101()
+    def load_model(self, pretrained):
+        # model = seg_models.deeplabv3_resnet101(pretrained)
+        model = seg_models.fcn_resnet101(pretrained)
 
         model.to(self.device)
         model.eval()
         return model
 
     def run_bg_inference(self, image_foreground: SegmentationSample):
-        model = SemanticSeg(pretrained=True, device='cuda')
+        model = SemanticSeg()
         output = model(image_foreground)
         new_img = self.remove_background(output, image_foreground.image_file)
         new_img = MUtils.image_resize(new_img, image_foreground.img_width, image_foreground.img_height, cv2.INTER_LINEAR)
@@ -64,6 +58,8 @@ class SemanticSeg(nn.Module):
                 r[idx] = label_colors[l, 0]
                 g[idx] = label_colors[l, 1]
                 b[idx] = label_colors[l, 2]
+            else:
+                continue
 
         rgb = np.stack([r, g, b], axis=2)
         # return rgb

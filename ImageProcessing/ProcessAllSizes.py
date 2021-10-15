@@ -1,7 +1,6 @@
 from math import sqrt, pi
 import numpy as np
 import cv2
-import torchvision.transforms as T
 from mediapipe.python.solutions import pose as mp_pose
 
 # Utils class to store measurement functions
