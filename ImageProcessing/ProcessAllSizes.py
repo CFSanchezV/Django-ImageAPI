@@ -339,6 +339,7 @@ class MUtils:
         l1, r2 = [l1[0], l1[1]] , [r2[0], r2[1]]
         return l1, r2
 
+
 class PositionsFront():
     def __init__(self, neckY, LwaistY, RwaistY, hipY, footY, chest_dist_front, L_arm, R_arm, L_leg, R_leg):
         self.neckY = neckY

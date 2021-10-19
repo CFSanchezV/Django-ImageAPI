@@ -17,7 +17,8 @@ class SemanticSeg(nn.Module):
     def forward(self, input: SegmentationSample):
         with no_grad():
             output = self.model(input.processed_image)['out']
-            reshaped_output = argmax(output.squeeze(), dim=0).detach().cpu()
+            # reshaped_output = argmax(output.squeeze(), dim=0).detach().cpu()
+            reshaped_output = argmax(output.squeeze(), dim=0).detach().cpu().numpy()
 
         return reshaped_output
 

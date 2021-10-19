@@ -96,7 +96,7 @@ def clean_folders(request):
         except Exception as e:
             print('Failed to delete {}. Reason: {}'.format(file_path, e) )
 
-    return Response({'response': "Media folders were cleaned up!!"})
+    return Response("response: " + "Media folders were cleaned up!!")
 
 
 @api_view(['GET'])
@@ -123,3 +123,11 @@ def delete_by_id(request, uuid):
 
     serializer = MeasurementSerializer(measure)
     return Response(data=serializer.data)
+
+
+@api_view(['GET'])
+def first_measurement(request):
+    measurement = Measurement.objects.first()
+
+    serializer = MeasurementSerializer(measurement)
+    return Response(serializer.data)
