@@ -42,14 +42,13 @@ def run_measureme_tool(request):
         sideimg_path = os.path.relpath(arr[1]['image'], '/')
         front_image = ImageSegmentation.objects.create(input_image=frontimg_path, name='image_{:02d}'.format(int(uuid.uuid1() )))
         side_image = ImageSegmentation.objects.create(input_image=sideimg_path, name='image_{:02d}'.format(int(uuid.uuid1() )))
-        
-        runner = ModelSegmentationClass(front_image, side_image)
-        runner.remove_backgrounds_save_imgs()
-        measurements = runner.process_imgs()
-        # runner = RunSegmentationInference(front_image, side_image)
-        # runner.save_frontbg_output()
-        # runner.save_sidebg_output()
+        # runner = ModelSegmentationClass(front_image, side_image)
+        # runner.remove_backgrounds_save_imgs()
         # measurements = runner.process_imgs()
+        runner = RunSegmentationInference(front_image, side_image)
+        runner.save_frontbg_output()
+        runner.save_sidebg_output()
+        measurements = runner.process_imgs()
         
 
         #store measurements

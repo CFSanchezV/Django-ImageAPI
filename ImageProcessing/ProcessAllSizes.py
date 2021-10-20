@@ -629,108 +629,108 @@ class AllMeasurements():
 
 
 # FOR TESTING PURPOSES
-import torchvision.models.segmentation as seg_models
-from torch import argmax
-from PIL import Image
-import torchvision.transforms as T
+# import torchvision.models.segmentation as seg_models
+# from torch import argmax
+# from PIL import Image
+# import torchvision.transforms as T
 
-class BackgroundAI():
-    def __init__(self, pretrained=True):
-        self.device = 'cpu'
+# class BackgroundAI():
+#     def __init__(self, pretrained=True):
+#         self.device = 'cpu'
 
-        self.model = self.load_model(pretrained)
+#         self.model = self.load_model(pretrained)
 
-    def load_model(self, pretrained=True):
-        model = seg_models.fcn_resnet101(pretrained) # fcnn
-        # model = seg_models.deeplabv3_resnet101(pretrained) #deeplab alt
+#     def load_model(self, pretrained=True):
+#         model = seg_models.fcn_resnet101(pretrained) # fcnn
+#         # model = seg_models.deeplabv3_resnet101(pretrained) #deeplab alt
 
-        model.eval()
-        return model
+#         model.eval()
+#         return model
 
-    def decode_segmap(self, image, source, num_channels=21):
-        # 0=background, 12=dog, 13=horse, 14=motorbike, 15=person
-        label_colors = np.array([(0, 0, 0),
-            (128, 0, 0), (0, 128, 0), (128, 128, 0), (0, 0, 128), (128, 0, 128),
-            (0, 128, 128), (128, 128, 128), (64, 0, 0), (192, 0, 0), (64, 128, 0),
-            (192, 128, 0), (64, 0, 128), (192, 0, 128), (64, 128, 128), (192, 128, 128),
-            (0, 64, 0), (128, 64, 0), (0, 192, 0), (128, 192, 0), (0, 64, 128)])
+#     def decode_segmap(self, image, source, num_channels=21):
+#         # 0=background, 12=dog, 13=horse, 14=motorbike, 15=person
+#         label_colors = np.array([(0, 0, 0),
+#             (128, 0, 0), (0, 128, 0), (128, 128, 0), (0, 0, 128), (128, 0, 128),
+#             (0, 128, 128), (128, 128, 128), (64, 0, 0), (192, 0, 0), (64, 128, 0),
+#             (192, 128, 0), (64, 0, 128), (192, 0, 128), (64, 128, 128), (192, 128, 128),
+#             (0, 64, 0), (128, 64, 0), (0, 192, 0), (128, 192, 0), (0, 64, 128)])
 
-        r = np.zeros_like(image).astype(np.uint8)
-        g = np.zeros_like(image).astype(np.uint8)
-        b = np.zeros_like(image).astype(np.uint8)
+#         r = np.zeros_like(image).astype(np.uint8)
+#         g = np.zeros_like(image).astype(np.uint8)
+#         b = np.zeros_like(image).astype(np.uint8)
 
-        # label 15 = person
-        for l in range(0, num_channels):
-            if l == 15:
-                idx = image == l
-                r[idx] = label_colors[l, 0]
-                g[idx] = label_colors[l, 1]
-                b[idx] = label_colors[l, 2]
-            else:
-                continue
+#         # label 15 = person
+#         for l in range(0, num_channels):
+#             if l == 15:
+#                 idx = image == l
+#                 r[idx] = label_colors[l, 0]
+#                 g[idx] = label_colors[l, 1]
+#                 b[idx] = label_colors[l, 2]
+#             else:
+#                 continue
 
-        rgb = np.stack([r, g, b], axis=2)
+#         rgb = np.stack([r, g, b], axis=2)
 
-        # Load the foreground input image
-        foreground = imread(source)
+#         # Load the foreground input image
+#         foreground = imread(source)
 
-        # Change color to RGB and resize to match shape
-        foreground = cvtColor(foreground, COLOR_BGR2RGB)
-        foreground = resize(foreground, (r.shape[1], r.shape[0]))
+#         # Change color to RGB and resize to match shape
+#         foreground = cvtColor(foreground, COLOR_BGR2RGB)
+#         foreground = resize(foreground, (r.shape[1], r.shape[0]))
 
-        # Create a background array to hold white pixels
-        background = 255 * np.ones_like(rgb).astype(np.uint8)
+#         # Create a background array to hold white pixels
+#         background = 255 * np.ones_like(rgb).astype(np.uint8)
 
-        # Convert uint8 to float
-        foreground = foreground.astype(float)
-        background = background.astype(float)
+#         # Convert uint8 to float
+#         foreground = foreground.astype(float)
+#         background = background.astype(float)
 
-        # Create a binary mask of the RGB output map using the threshold value 0
-        _, alpha = threshold(np.array(rgb), 0, 255, THRESH_BINARY)
+#         # Create a binary mask of the RGB output map using the threshold value 0
+#         _, alpha = threshold(np.array(rgb), 0, 255, THRESH_BINARY)
 
-        # Apply a slight blur to the mask to soften edges
-        alpha = GaussianBlur(alpha, (7, 7), 0)
+#         # Apply a slight blur to the mask to soften edges
+#         alpha = GaussianBlur(alpha, (7, 7), 0)
 
-        # Normalize the alpha mask to keep intensity between 0 and 1
-        alpha = alpha.astype(float)/255
+#         # Normalize the alpha mask to keep intensity between 0 and 1
+#         alpha = alpha.astype(float)/255
 
-        # Multiply the foreground with the alpha matte
-        foreground = multiply(alpha, foreground)
+#         # Multiply the foreground with the alpha matte
+#         foreground = multiply(alpha, foreground)
 
-        # Multiply the background with ( 1 - alpha )
-        background = multiply(1.0 - alpha, background)
+#         # Multiply the background with ( 1 - alpha )
+#         background = multiply(1.0 - alpha, background)
 
-        # Add the masked foreground and background
-        outImage = add(foreground, background)
+#         # Add the masked foreground and background
+#         outImage = add(foreground, background)
 
-        # Return a normalized output image for display
-        return outImage/255
+#         # Return a normalized output image for display
+#         return outImage/255
 
-    def segment(self, path):
-        img = Image.open(path)
+#     def segment(self, path):
+#         img = Image.open(path)
 
-        preprocessing = T.Compose([T.Resize(450),
-                         T.ToTensor(),
-                         T.Normalize(mean=[0.485, 0.456, 0.406],
-                                 std=[0.229, 0.224, 0.225])])
+#         preprocessing = T.Compose([T.Resize(450),
+#                          T.ToTensor(),
+#                          T.Normalize(mean=[0.485, 0.456, 0.406],
+#                                  std=[0.229, 0.224, 0.225])])
 
-        inp = preprocessing(img).unsqueeze(0).to(self.device)
-        del preprocessing
+#         inp = preprocessing(img).unsqueeze(0).to(self.device)
+#         del preprocessing
 
-        # out = self.model.to(self.device)(inp)['out']
-        out = self.model(inp)["out"]
+#         # out = self.model.to(self.device)(inp)['out']
+#         out = self.model(inp)["out"]
 
-        om = argmax(out.squeeze(), dim=0).detach().cpu().numpy()
-        rgb = self.decode_segmap(om, path)
-        del om
+#         om = argmax(out.squeeze(), dim=0).detach().cpu().numpy()
+#         rgb = self.decode_segmap(om, path)
+#         del om
 
-        # Resize back to orig
-        # w, h = img.size[:]
-        # rgb = MUtils.image_resize(rgb, width=w, height=h, inter=INTER_LINEAR)
-        # returnedIMG = MUtils.convert_image(rgb)
+#         # Resize back to orig
+#         # w, h = img.size[:]
+#         # rgb = MUtils.image_resize(rgb, width=w, height=h, inter=INTER_LINEAR)
+#         # returnedIMG = MUtils.convert_image(rgb)
 
-        w, h = img.size[:]
-        rgb = MUtils.convert_image(rgb)
-        returnedIMG = MUtils.image_resize(rgb, width=w, height=h, inter=INTER_LINEAR)
+#         w, h = img.size[:]
+#         rgb = MUtils.convert_image(rgb)
+#         returnedIMG = MUtils.image_resize(rgb, width=w, height=h, inter=INTER_LINEAR)
         
-        return returnedIMG
+#         return returnedIMG
