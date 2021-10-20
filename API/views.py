@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import render
 from django.views.decorators.cache import never_cache
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -42,13 +42,15 @@ def run_measureme_tool(request):
         sideimg_path = os.path.relpath(arr[1]['image'], '/')
         front_image = ImageSegmentation.objects.create(input_image=frontimg_path, name='image_{:02d}'.format(int(uuid.uuid1() )))
         side_image = ImageSegmentation.objects.create(input_image=sideimg_path, name='image_{:02d}'.format(int(uuid.uuid1() )))
-        runner = RunSegmentationInference(front_image, side_image)
-        new_front = runner.save_frontbg_output()
-        new_side= runner.save_sidebg_output()
-        del runner
+        
+        runner = ModelSegmentationClass(front_image, side_image)
+        runner.remove_backgrounds_save_imgs()
+        measurements = runner.process_imgs()
+        # runner = RunSegmentationInference(front_image, side_image)
+        # runner.save_frontbg_output()
+        # runner.save_sidebg_output()
         # measurements = runner.process_imgs()
-        processor = MyProcessor(new_front, new_side)
-        measurements = processor.process_imgs()
+        
 
         #store measurements
         measure = Measurement()
