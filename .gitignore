@@ -132,6 +132,5 @@ Thumbs.db
 ImageProcessing/images
 Pipfile
 Pipfile.lock
-
 media/Input_image/
 media/Output_image/
