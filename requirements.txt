@@ -47,9 +47,11 @@ matplotlib==3.4.3; python_version >= '3.7'
 
 numpy==1.21.2; python_version < '3.11' and python_version >= '3.7'
 
-opencv-contrib-python-headless==4.5.3.56
+opencv-python-headless==4.5.3.56
 
-mediapipe==0.8.8.1
+mediapipe==0.8.8
+
+opencv-contrib-python-headless==4.5.3.56
 
 packaging==21.0; python_version >= '3.6'
 
