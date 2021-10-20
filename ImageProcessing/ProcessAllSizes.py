@@ -1,22 +1,22 @@
 from math import sqrt, pi
 import numpy as np
-import cv2
+from cv2 import convertScaleAbs, imwrite, cvtColor, imread, add, resize, threshold, GaussianBlur, multiply, floodFill, bitwise_not, contourArea, filter2D, findContours, THRESH_BINARY_INV, THRESH_BINARY, COLOR_BGR2RGB, INTER_AREA, INTER_LINEAR, COLOR_RGB2BGR, COLOR_BGR2GRAY, CHAIN_APPROX_NONE, RETR_TREE
 from mediapipe.python.solutions import pose as mp_pose
 
 # Utils class to store measurement functions
 class MUtils:
     @staticmethod
     def write_image(path, img):
-        img = cv2.convertScaleAbs(img, alpha=(255.0))
-        cv2.imwrite(path, img)
+        img = convertScaleAbs(img, alpha=(255.0))
+        imwrite(path, img)
 
     @staticmethod
     def convert_image(img):
-        img = cv2.convertScaleAbs(img, alpha=(255.0))
+        img = convertScaleAbs(img, alpha=(255.0))
         return img
 
     @staticmethod
-    def image_resize(image, width = None, height = None, inter = cv2.INTER_AREA):
+    def image_resize(image, width = None, height = None, inter = INTER_AREA):
         dim = None
         (h, w) = image.shape[:2]
 
@@ -32,7 +32,7 @@ class MUtils:
             r = width / float(w)
             dim = (width, int(h * r))
 
-        resized = cv2.resize(image, dim, interpolation = inter)
+        resized = resize(image, dim, interpolation = inter)
         return resized
 
     @staticmethod
@@ -237,7 +237,7 @@ class MUtils:
         """find main contour (2nd biggest contour area)"""
         areas = []
         for cont in contours:
-            areas.append(cv2.contourArea(cont))
+            areas.append(contourArea(cont))
 
         n = len(areas)
         areas.sort()
@@ -317,7 +317,7 @@ class MUtils:
         b = np.array(topPoint) # p2
 
         dist = np.linalg.norm(a - b)
-        # cv2.line(canvas, a, b, (255,0,0), 2, cv2.LINE_AA)
+        # line(canvas, a, b, (255,0,0), 2, LINE_AA)
 
         return dist
         
@@ -399,9 +399,9 @@ class IMGSProcessor():
             # img_front = MUtils.image_resize(img_front, height=730)  # TESTING
             h, w, _  = img_front.shape
             
-            img_front = cv2.cvtColor(img_front, cv2.COLOR_BGR2RGB)
+            img_front = cvtColor(img_front, COLOR_BGR2RGB)
             results = poser.process(img_front)
-            img_front = cv2.cvtColor(img_front, cv2.COLOR_RGB2BGR)
+            img_front = cvtColor(img_front, COLOR_RGB2BGR)
             
             # GET LANDMARKS
             landmarks = results.pose_landmarks.landmark
@@ -434,7 +434,7 @@ class IMGSProcessor():
             r_arm = MUtils.calculate_limb_dist(r_shoulder, r_elbow, r_wrist, w, h)
             l_leg = MUtils.calculate_limb_dist(l_hip, l_knee, l_ankle, w, h, d=l_heel)
             r_leg = MUtils.calculate_limb_dist(r_hip, r_knee, r_ankle, w, h, d=r_heel)
-
+        del poser
         return PositionsFront(neckY, LwaistY, RwaistY, hipY, footY, chest_dist_front, l_arm, r_arm, l_leg, r_leg)
 
     def find_positions_side(self):
@@ -444,9 +444,9 @@ class IMGSProcessor():
             h, w, _  = img_side.shape
 
             # Recolor image to RGB
-            img_side = cv2.cvtColor(img_side, cv2.COLOR_BGR2RGB)
+            img_side = cvtColor(img_side, COLOR_BGR2RGB)
             results = poser.process(img_side)
-            img_side = cv2.cvtColor(img_side, cv2.COLOR_RGB2BGR)
+            img_side = cvtColor(img_side, COLOR_RGB2BGR)
             
             # GET LANDMARKS
             landmarks = results.pose_landmarks.landmark
@@ -463,16 +463,16 @@ class IMGSProcessor():
             chestY = MUtils.find_ChestY(l_elbow, l_shoulder, w, h)
             waistY = MUtils.find_Side_WaistY(l_shoulder, r_shoulder, l_hip, r_hip,  w, h)
             hipY = MUtils.find_HipY(l_hip, w, h)
-
+        del poser
         return PositionsSide(LneckY, RneckY, chestY, waistY, hipY)
 
     def find_contours_front(self):
         img_in = self.frontIMG
-        img_in = cv2.cvtColor(img_in, cv2.COLOR_BGR2GRAY)
+        img_in = cvtColor(img_in, COLOR_BGR2GRAY)
         # img_in = MUtils.image_resize(img_in, height=730)  # TESTING
         
         # Threshold. Set values equal to or above 220 to 0. Set values below 220 to 255.
-        _, img_thres = cv2.threshold(img_in, 245, 255, cv2.THRESH_BINARY_INV)
+        _, img_thres = threshold(img_in, 245, 255, THRESH_BINARY_INV)
         
         img_floodfill = img_thres.copy()
         
@@ -481,10 +481,10 @@ class IMGSProcessor():
         mask = np.zeros((h+2, w+2), np.uint8)
 
         # Floodfill from point (0, 0)
-        cv2.floodFill(img_floodfill, mask, (0,0), 255)
+        floodFill(img_floodfill, mask, (0,0), 255)
 
         # Invert floodfilled image
-        im_floodfill_inv = cv2.bitwise_not(img_floodfill)
+        im_floodfill_inv = bitwise_not(img_floodfill)
 
         # Combine the two images to get the foreground.
         img_out = img_thres | im_floodfill_inv
@@ -496,11 +496,11 @@ class IMGSProcessor():
 
         ## blurring with kernel 25 ##
         kernel = np.ones((5, 5), np.float32)/25
-        img2gray = cv2.filter2D(img2gray, -1, kernel)
+        img2gray = filter2D(img2gray, -1, kernel)
 
         #extract contours from thresholded image
-        _, thresh = cv2.threshold(img2gray, 250, 255, cv2.THRESH_BINARY_INV)
-        contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+        _, thresh = threshold(img2gray, 250, 255, THRESH_BINARY_INV)
+        contours, _ = findContours(thresh, RETR_TREE, CHAIN_APPROX_NONE)
 
         ### GET SIZES, return sizes originally written in canvas ###
         cnt = contours[-1]
@@ -530,11 +530,11 @@ class IMGSProcessor():
 
     def find_contours_side(self):
         img_in = self.sideIMG
-        img_in = cv2.cvtColor(img_in, cv2.COLOR_BGR2GRAY)
+        img_in = cvtColor(img_in, COLOR_BGR2GRAY)
         # img_in = MUtils.image_resize(img_in, height=730)  # TESTING
         
         # Threshold. Set values equal to or above 220 to 0. Set values below 220 to 255.
-        _, img_thres = cv2.threshold(img_in, 245, 255, cv2.THRESH_BINARY_INV)
+        _, img_thres = threshold(img_in, 245, 255, THRESH_BINARY_INV)
         
         img_floodfill = img_thres.copy()
         
@@ -543,10 +543,10 @@ class IMGSProcessor():
         mask = np.zeros((h+2, w+2), np.uint8)
 
         # Floodfill from point (0, 0)
-        cv2.floodFill(img_floodfill, mask, (0,0), 255)
+        floodFill(img_floodfill, mask, (0,0), 255)
 
         # Invert floodfilled image
-        im_floodfill_inv = cv2.bitwise_not(img_floodfill)
+        im_floodfill_inv = bitwise_not(img_floodfill)
 
         # Combine the two images to get the foreground.
         img_out = img_thres | im_floodfill_inv
@@ -558,11 +558,11 @@ class IMGSProcessor():
 
         ## blurring with kernel 25 ##
         kernel = np.ones((5, 5), np.float32)/25
-        img2gray = cv2.filter2D(img2gray, -1, kernel)
+        img2gray = filter2D(img2gray, -1, kernel)
 
         #extract contours from thresholded image
-        _, thresh = cv2.threshold(img2gray, 250, 255, cv2.THRESH_BINARY_INV)
-        contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+        _, thresh = threshold(img2gray, 250, 255, THRESH_BINARY_INV)
+        contours, _ = findContours(thresh, RETR_TREE, CHAIN_APPROX_NONE)
 
         ### GET SIZES, return sizes originally written in canvas ###
         cnt = contours[-1]
@@ -626,3 +626,111 @@ class AllMeasurements():
 
         perimeter = MUtils.calculate_Perimeter(Fhip, Ship)
         return perimeter
+
+
+# FOR TESTING PURPOSES
+import torchvision.models.segmentation as seg_models
+from torch import argmax
+from PIL import Image
+import torchvision.transforms as T
+
+class BackgroundAI():
+    def __init__(self, pretrained=True):
+        self.device = 'cpu'
+
+        self.model = self.load_model(pretrained)
+
+    def load_model(self, pretrained=True):
+        model = seg_models.fcn_resnet101(pretrained) # fcnn
+        # model = seg_models.deeplabv3_resnet101(pretrained) #deeplab alt
+
+        model.eval()
+        return model
+
+    def decode_segmap(self, image, source, num_channels=21):
+        # 0=background, 12=dog, 13=horse, 14=motorbike, 15=person
+        label_colors = np.array([(0, 0, 0),
+            (128, 0, 0), (0, 128, 0), (128, 128, 0), (0, 0, 128), (128, 0, 128),
+            (0, 128, 128), (128, 128, 128), (64, 0, 0), (192, 0, 0), (64, 128, 0),
+            (192, 128, 0), (64, 0, 128), (192, 0, 128), (64, 128, 128), (192, 128, 128),
+            (0, 64, 0), (128, 64, 0), (0, 192, 0), (128, 192, 0), (0, 64, 128)])
+
+        r = np.zeros_like(image).astype(np.uint8)
+        g = np.zeros_like(image).astype(np.uint8)
+        b = np.zeros_like(image).astype(np.uint8)
+
+        # label 15 = person
+        for l in range(0, num_channels):
+            if l == 15:
+                idx = image == l
+                r[idx] = label_colors[l, 0]
+                g[idx] = label_colors[l, 1]
+                b[idx] = label_colors[l, 2]
+            else:
+                continue
+
+        rgb = np.stack([r, g, b], axis=2)
+
+        # Load the foreground input image
+        foreground = imread(source)
+
+        # Change color to RGB and resize to match shape
+        foreground = cvtColor(foreground, COLOR_BGR2RGB)
+        foreground = resize(foreground, (r.shape[1], r.shape[0]))
+
+        # Create a background array to hold white pixels
+        background = 255 * np.ones_like(rgb).astype(np.uint8)
+
+        # Convert uint8 to float
+        foreground = foreground.astype(float)
+        background = background.astype(float)
+
+        # Create a binary mask of the RGB output map using the threshold value 0
+        _, alpha = threshold(np.array(rgb), 0, 255, THRESH_BINARY)
+
+        # Apply a slight blur to the mask to soften edges
+        alpha = GaussianBlur(alpha, (7, 7), 0)
+
+        # Normalize the alpha mask to keep intensity between 0 and 1
+        alpha = alpha.astype(float)/255
+
+        # Multiply the foreground with the alpha matte
+        foreground = multiply(alpha, foreground)
+
+        # Multiply the background with ( 1 - alpha )
+        background = multiply(1.0 - alpha, background)
+
+        # Add the masked foreground and background
+        outImage = add(foreground, background)
+
+        # Return a normalized output image for display
+        return outImage/255
+
+    def segment(self, path):
+        img = Image.open(path)
+
+        preprocessing = T.Compose([T.Resize(450),
+                         T.ToTensor(),
+                         T.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])])
+
+        inp = preprocessing(img).unsqueeze(0).to(self.device)
+        del preprocessing
+
+        # out = self.model.to(self.device)(inp)['out']
+        out = self.model(inp)["out"]
+
+        om = argmax(out.squeeze(), dim=0).detach().cpu().numpy()
+        rgb = self.decode_segmap(om, path)
+        del om
+
+        # Resize back to orig
+        # w, h = img.size[:]
+        # rgb = MUtils.image_resize(rgb, width=w, height=h, inter=INTER_LINEAR)
+        # returnedIMG = MUtils.convert_image(rgb)
+
+        w, h = img.size[:]
+        rgb = MUtils.convert_image(rgb)
+        returnedIMG = MUtils.image_resize(rgb, width=w, height=h, inter=INTER_LINEAR)
+        
+        return returnedIMG

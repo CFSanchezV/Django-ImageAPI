@@ -1,4 +1,4 @@
-from torch import no_grad, argmax
+from torch import argmax
 import torch.nn as nn
 import numpy as np
 import cv2
@@ -10,15 +10,14 @@ from ImageProcessing.ProcessAllSizes import MUtils
 class SemanticSeg(nn.Module):
     def __init__(self):
         super(SemanticSeg, self).__init__()
-
         self.device = 'cpu'
+        
         self.model = self.load_model(pretrained=True)
 
     def forward(self, input: SegmentationSample):
-        with no_grad():
-            output = self.model(input.processed_image)['out']
-            # reshaped_output = argmax(output.squeeze(), dim=0).detach().cpu()
-            reshaped_output = argmax(output.squeeze(), dim=0).detach().cpu().numpy()
+        
+        output = self.model(input.processed_image)['out']
+        reshaped_output = argmax(output.squeeze(), dim=0).detach().cpu().numpy()
 
         return reshaped_output
 

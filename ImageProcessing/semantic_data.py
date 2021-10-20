@@ -25,4 +25,6 @@ class SegmentationSample(Dataset):
 
         self.processed_image = self.processed_image.unsqueeze(0).to(self.device)
 
+    def __getitem__(self, item):
+        return self.processed_image
         
